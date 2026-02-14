@@ -11,8 +11,8 @@ $w.onReady(function () {
     buttons.forEach(function (buttonId) {
         var btn = $w(buttonId);
 
-        if (!btn || typeof btn.onClick !== "function") {
-            console.warn("Button not found or invalid:", buttonId);
+        if (!btn) {
+            console.warn("Button not found:", buttonId);
             return;
         }
 
@@ -35,90 +35,43 @@ $w.onReady(function () {
                 easing: "easeInOutQuad"
             }
         ).catch(function (err) {
-            console.warn("flyButton animate error:", err);
+            console.warn("flyButton error:", err);
         });
     }
 
     // =====================================
-    // IMAGE FADE LOOP
+    // IMAGE FADE LOOP (Correct Method)
     // =====================================
 
-    (function setupImageFade() {
+    var img = $w("#imageX1");
 
-        var img = $w("#imageX1");
+    if (!img) {
+        console.warn("imageX1 not found");
+        return;
+    }
 
-        if (!img) {
-            console.warn("imageX1 not found");
-            return;
-        }
+    var fadeDuration = 1000;    // 1 second fade
+    var visibleDuration = 8000; // stays visible 8 seconds
 
-        var fadeDuration = 1000;    // 1 second fade
-        var visibleDuration = 8000; // stays visible 8 seconds
+    function wait(ms) {
+        return new Promise(function (resolve) {
+            setTimeout(resolve, ms);
+        });
+    }
 
-        var stopped = false;
+    (async function fadeLoop() {
 
-        function wait(ms) {
-            return new Promise(function (resolve) {
-                setTimeout(resolve, ms);
-            });
-        }
+        while (true) {
 
-        // Ensure image is visible in layout
-        if (typeof img.show === "function") {
-            img.show();
-        }
+            // Fade in
+            await img.show("fade", { duration: fadeDuration });
 
-        // Set initial opacity to 0 instantly
-        img.animate(
-            { opacity: 0 },
-            { duration: 0 }
-        ).catch(function () {});
+            await wait(visibleDuration);
 
-        // Fade loop
-        (async function loopFade() {
+            // Fade out
+            await img.hide("fade", { duration: fadeDuration });
 
-            while (!stopped) {
-
-                // FADE IN
-                try {
-                    await img.animate(
-                        { opacity: 1 },
-                        {
-                            duration: fadeDuration,
-                            easing: "easeInOutQuad"
-                        }
-                    );
-                } catch (e) {
-                    console.warn("Fade in failed:", e);
-                    break;
-                }
-
-                await wait(visibleDuration);
-
-                // FADE OUT
-                try {
-                    await img.animate(
-                        { opacity: 0 },
-                        {
-                            duration: fadeDuration,
-                            easing: "easeInOutQuad"
-                        }
-                    );
-                } catch (e) {
-                    console.warn("Fade out failed:", e);
-                    break;
-                }
-            }
-
-        })();
-
-        // Stop loop if navigating away
-        if (typeof window !== "undefined") {
-            var stop = function () {
-                stopped = true;
-            };
-            window.addEventListener("beforeunload", stop);
-            window.addEventListener("unload", stop);
+            await wait(500); // small buffer before repeating
         }
 
     })();
