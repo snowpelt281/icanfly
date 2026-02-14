@@ -52,4 +52,75 @@ $w.onReady(function () {
             return;
         }
 
-        var fade
+        var fadeDuration = 1000;    // 1 second fade
+        var visibleDuration = 8000; // stays visible 8 seconds
+
+        var stopped = false;
+
+        function wait(ms) {
+            return new Promise(function (resolve) {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        // Ensure image is visible in layout
+        if (typeof img.show === "function") {
+            img.show();
+        }
+
+        // Set initial opacity to 0 instantly
+        img.animate(
+            { opacity: 0 },
+            { duration: 0 }
+        ).catch(function () {});
+
+        // Fade loop
+        (async function loopFade() {
+
+            while (!stopped) {
+
+                // FADE IN
+                try {
+                    await img.animate(
+                        { opacity: 1 },
+                        {
+                            duration: fadeDuration,
+                            easing: "easeInOutQuad"
+                        }
+                    );
+                } catch (e) {
+                    console.warn("Fade in failed:", e);
+                    break;
+                }
+
+                await wait(visibleDuration);
+
+                // FADE OUT
+                try {
+                    await img.animate(
+                        { opacity: 0 },
+                        {
+                            duration: fadeDuration,
+                            easing: "easeInOutQuad"
+                        }
+                    );
+                } catch (e) {
+                    console.warn("Fade out failed:", e);
+                    break;
+                }
+            }
+
+        })();
+
+        // Stop loop if navigating away
+        if (typeof window !== "undefined") {
+            var stop = function () {
+                stopped = true;
+            };
+            window.addEventListener("beforeunload", stop);
+            window.addEventListener("unload", stop);
+        }
+
+    })();
+
+});
