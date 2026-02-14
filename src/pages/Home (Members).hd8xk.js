@@ -2,56 +2,23 @@
 
 $w.onReady(function () {
 
-    // =====================================
-    // FLYING BUTTONS
-    // =====================================
-
-    var buttons = ["#button6", "#button7", "#button8"];
-
-    buttons.forEach(function (buttonId) {
-        var btn = $w(buttonId);
-
-        if (!btn) {
-            console.warn("Button not found:", buttonId);
-            return;
-        }
-
-        btn.onClick(function () {
-            flyButton(btn);
-        });
-    });
-
-    function flyButton(button) {
-        var x = Math.floor(Math.random() * 300);
-        var y = Math.floor(Math.random() * 200);
-
-        button.animate(
-            {
-                x: x,
-                y: y
-            },
-            {
-                duration: 1200,
-                easing: "easeInOutQuad"
-            }
-        ).catch(function (err) {
-            console.warn("flyButton error:", err);
-        });
-    }
+    console.log("Page ready");
 
     // =====================================
-    // IMAGE FADE LOOP (Correct Method)
+    // IMAGE FADE LOOP (DEBUG VERSION)
     // =====================================
 
     var img = $w("#imageX1");
 
     if (!img) {
-        console.warn("imageX1 not found");
+        console.error("❌ imageX1 not found");
         return;
     }
 
-    var fadeDuration = 1000;    // 1 second fade
-    var visibleDuration = 8000; // stays visible 8 seconds
+    console.log("✅ imageX1 found");
+
+    var fadeDuration = 1000;     // 1 second fade
+    var visibleDuration = 8000;  // 8 seconds visible
 
     function wait(ms) {
         return new Promise(function (resolve) {
@@ -59,21 +26,39 @@ $w.onReady(function () {
         });
     }
 
-    (async function fadeLoop() {
+    async function fadeLoop() {
+
+        console.log("Starting fade loop");
 
         while (true) {
 
-            // Fade in
-            await img.show("fade", { duration: fadeDuration });
+            try {
 
-            await wait(visibleDuration);
+                // Make sure it's not collapsed
+                if (img.collapsed) {
+                    console.log("Expanding image (was collapsed)");
+                    img.expand();
+                }
 
-            // Fade out
-            await img.hide("fade", { duration: fadeDuration });
+                console.log("➡️ Showing image...");
+                await img.show("fade", { duration: fadeDuration });
+                console.log("✅ Image shown");
 
-            await wait(500); // small buffer before repeating
+                await wait(visibleDuration);
+
+                console.log("⬅️ Hiding image...");
+                await img.hide("fade", { duration: fadeDuration });
+                console.log("✅ Image hidden");
+
+                await wait(500);
+
+            } catch (err) {
+                console.error("❌ Fade loop error:", err);
+                break;
+            }
         }
+    }
 
-    })();
+    fadeLoop();
 
 });
